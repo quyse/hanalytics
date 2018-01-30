@@ -1,0 +1,29 @@
+name:                hanalytics-bigquery
+version:             0.1.0.0
+-- synopsis:            
+-- description:         
+license:             MIT
+license-file:        ../LICENSE
+author:              Alexander Bich
+maintainer:          quyse0@gmail.com
+-- copyright:           
+category:            Data
+build-type:          Simple
+-- extra-source-files:  
+cabal-version:       >=1.10
+
+source-repository head
+  type: git
+  location: https://github.com/quyse/hanalytics.git
+  subdir: hanalytics-bigquery
+
+library
+  exposed-modules:
+    Hanalytics.Schema.BigQuery
+  build-depends:
+    aeson
+    , base
+    , hanalytics-base
+    , unordered-containers
+    , vector
+  default-language:    Haskell2010
