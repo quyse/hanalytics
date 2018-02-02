@@ -17,6 +17,7 @@ import qualified Data.Avro.Schema as AS
 import qualified Data.Avro.Types as AT
 import qualified Data.HashMap.Lazy as HML
 import Data.Proxy
+import Data.Scientific
 import Data.Tagged
 import qualified Data.Text as T
 import qualified Data.Vector as V
@@ -108,3 +109,10 @@ instance A.HasAvroSchema Integer where
 
 instance A.ToAvro Integer where
 	toAvro = A.toAvro . (fromIntegral :: Integer -> Double)
+
+-- unfortunately have to use double for Scientific
+instance A.HasAvroSchema Scientific where
+	schema = Tagged $ unTagged (A.schema :: Tagged Double AS.Type)
+
+instance A.ToAvro Scientific where
+	toAvro = A.toAvro . (toRealFloat :: Scientific -> Double)

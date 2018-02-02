@@ -20,6 +20,7 @@ import qualified Data.ByteString as B
 import Data.Int
 import Data.Maybe
 import Data.Proxy
+import Data.Scientific
 import qualified Data.Text as T
 import qualified Data.Vector as V
 import qualified GHC.Generics as G
@@ -46,6 +47,7 @@ data SchemaFieldType
 	| SchemaFieldType_string
 	| SchemaFieldType_int64
 	| SchemaFieldType_integer
+	| SchemaFieldType_rational
 	| SchemaFieldType_float
 	| SchemaFieldType_bool
 	| SchemaFieldType_record
@@ -114,6 +116,9 @@ instance SchemableField Int64 where
 
 instance SchemableField Integer where
 	schemaFieldTypeOf _ = SchemaFieldType_integer
+
+instance SchemableField Scientific where
+	schemaFieldTypeOf _ = SchemaFieldType_rational
 
 instance SchemableField Double where
 	schemaFieldTypeOf _ = SchemaFieldType_float

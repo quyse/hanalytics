@@ -24,6 +24,7 @@ library
     avro
     , base
     , hanalytics-base
+    , scientific
     , tagged
     , text
     , unordered-containers

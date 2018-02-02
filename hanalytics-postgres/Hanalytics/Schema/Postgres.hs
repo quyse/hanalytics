@@ -18,6 +18,7 @@ import Data.Monoid
 import qualified Data.ByteArray.Encoding as BA
 import qualified Data.ByteString as B
 import Data.Proxy
+import Data.Scientific
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy.Builder as TL
@@ -51,6 +52,7 @@ postgresSchemaFieldTypeName = \case
 	SchemaFieldType_string -> "TEXT"
 	SchemaFieldType_int64 -> "BIGINT"
 	SchemaFieldType_integer -> "NUMERIC"
+	SchemaFieldType_rational -> "NUMERIC"
 	SchemaFieldType_float -> "DOUBLE PRECISION"
 	SchemaFieldType_bool -> "BOOLEAN"
 	SchemaFieldType_record
@@ -115,6 +117,9 @@ instance ToPostgresText Int64 where
 
 instance ToPostgresText Integer where
 	toPostgresText _ = TL.decimal
+
+instance ToPostgresText Scientific where
+	toPostgresText _ = TL.fromString . show
 
 instance ToPostgresText Bool where
 	toPostgresText _ b = if b then "TRUE" else "FALSE"

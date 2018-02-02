@@ -23,6 +23,7 @@ library
   build-depends:
     base
     , bytestring
+    , scientific
     , text
     , vector
   default-language:    Haskell2010

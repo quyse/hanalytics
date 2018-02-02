@@ -37,6 +37,7 @@ bigQuerySchema Schema
 				SchemaFieldType_string -> "STRING"
 				SchemaFieldType_int64 -> "INTEGER"
 				SchemaFieldType_integer -> "FLOAT" -- unfortunately
+				SchemaFieldType_rational -> "FLOAT" -- unfortunately
 				SchemaFieldType_float -> "FLOAT"
 				SchemaFieldType_bool -> "BOOLEAN"
 				SchemaFieldType_record _ -> "RECORD"
