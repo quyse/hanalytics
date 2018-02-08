@@ -23,6 +23,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy.Builder as TL
 import qualified Data.Text.Lazy.Builder.Int as TL
+import qualified Data.Text.Lazy.Builder.RealFloat as TL
 import qualified Data.Vector as V
 import qualified GHC.Generics as G
 
@@ -117,6 +118,12 @@ instance ToPostgresText Int64 where
 
 instance ToPostgresText Integer where
 	toPostgresText _ = TL.decimal
+
+instance ToPostgresText Float where
+	toPostgresText _ = TL.realFloat
+
+instance ToPostgresText Double where
+	toPostgresText _ = TL.realFloat
 
 instance ToPostgresText Scientific where
 	toPostgresText _ = TL.fromString . show
