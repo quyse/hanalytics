@@ -103,7 +103,7 @@ instance (GenericToPostgresTextSelector a, GenericToPostgresTextSelector b) => G
 	genericToPostgresTextSelector (a G.:*: b) = genericToPostgresTextSelector a <> ", " <> genericToPostgresTextSelector b
 
 instance ToPostgresText a => GenericToPostgresTextValue (G.K1 G.R a) where
-	genericToPostgresTextValue = toPostgresText True . G.unK1
+	genericToPostgresTextValue = toPostgresText False . G.unK1
 
 -- some instances
 
