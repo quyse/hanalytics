@@ -93,13 +93,6 @@ instance A.ToAvro a => GenericAvroSchemableValue (G.K1 G.R a) where
 
 -- Schema for some types
 
-instance A.HasAvroSchema a => A.HasAvroSchema (V.Vector a) where
-	schema = f A.schema where
-		f :: A.HasAvroSchema a => Tagged a AS.Type -> Tagged (V.Vector a) AS.Type
-		f g = Tagged AS.Array
-			{ AS.item = unTagged g
-			}
-
 instance A.ToAvro a => A.ToAvro (V.Vector a) where
 	toAvro = AT.Array . V.map A.toAvro
 
