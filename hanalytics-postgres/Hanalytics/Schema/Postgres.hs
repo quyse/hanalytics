@@ -10,6 +10,7 @@ module Hanalytics.Schema.Postgres
 	( postgresSchemaFields
 	, postgresSqlCreateType
 	, postgresSqlInsertGroup
+	, postgresSqlUpsertGroup
 	, ToPostgresText(..)
 	) where
 
@@ -19,6 +20,7 @@ import qualified Data.ByteArray.Encoding as BA
 import qualified Data.ByteString as B
 import Data.Proxy
 import Data.Scientific
+import Data.String
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy.Builder as TL
@@ -66,12 +68,30 @@ postgresSchemaFieldTypeName = \case
 postgresSqlCreateType :: Schema -> TL.Builder
 postgresSqlCreateType schema@Schema
 	{ schema_name = name
-	} = "CREATE TYPE \"" <> TL.fromText name <> "\" AS (" <> foldr1 (\a b -> a <> ", " <> b) (postgresSchemaFields False schema) <> ");\n"
+	} = "CREATE TYPE \"" <> TL.fromText name <> "\" AS (" <> foldr1Comma (postgresSchemaFields False schema) <> ");\n"
 
 -- | Generate SQL INSERT command for a bunch of records.
-postgresSqlInsertGroup :: ToPostgresText a => T.Text -> [a] -> TL.Builder
-postgresSqlInsertGroup tableName records = "INSERT INTO \"" <> TL.fromText tableName <> "\" VALUES " <> recordsText <> ";\n" where
-	recordsText = foldr1 (\a b -> a <> ", " <> b) $ map (\a -> "(" <> toPostgresText True a <> ")") records
+postgresSqlInsertGroup :: ToPostgresText a => Schema -> T.Text -> [a] -> TL.Builder
+postgresSqlInsertGroup Schema
+	{ schema_fields = fields
+	} tableName records = "INSERT INTO \"" <> TL.fromText tableName <> "\"(" <> fieldsText <> ") VALUES " <> recordsText <> ";\n" where
+	recordsText = foldr1Comma $ map (\a -> "(" <> toPostgresText True a <> ")") records
+	fieldsText = foldr1Comma $ fmap (\SchemaField
+		{ schemaField_name = fieldName
+		} -> "\"" <> TL.fromText fieldName <> "\"") fields
+
+-- | Generate SQL upsert (INSERT ... ON CONFLICT DO UPDATE) command for a bunch of records.
+postgresSqlUpsertGroup :: ToPostgresText a => T.Text -> Schema -> T.Text -> [a] -> TL.Builder
+postgresSqlUpsertGroup conflictField Schema
+	{ schema_fields = fields
+	} tableName records = "INSERT INTO \"" <> TL.fromText tableName <> "\"(" <> fieldsText <> ") VALUES " <> recordsText <> " ON CONFLICT (\"" <> TL.fromText conflictField <> "\") DO UPDATE SET " <> assignsText <> ";\n" where
+	recordsText = foldr1Comma $ map (\a -> "(" <> toPostgresText True a <> ")") records
+	fieldsText = foldr1Comma $ fmap (\SchemaField
+		{ schemaField_name = fieldName
+		} -> "\"" <> TL.fromText fieldName <> "\"") fields
+	assignsText = foldr1Comma $ fmap (\SchemaField
+		{ schemaField_name = fieldName
+		} -> "\"" <> TL.fromText fieldName <> "\" = EXCLUDED.\"" <> TL.fromText fieldName <> "\"") fields
 
 -- | Class for exporting values into postgres text import format.
 class ToPostgresText a where
@@ -135,6 +155,9 @@ instance ToPostgresText a => ToPostgresText (Maybe a) where
 	toPostgresText _ = maybe "NULL" (toPostgresText False)
 
 instance (ToPostgresText a, SchemableField a) => ToPostgresText (V.Vector a) where
-	toPostgresText _ v@(V.map (toPostgresText False) -> vt) = "ARRAY[" <> (if V.null v then mempty else V.foldr1 (\a b -> a <> ", " <> b) vt) <> "]::" <> elementTypeStr v Proxy <> "[]" where
+	toPostgresText _ v@(V.map (toPostgresText False) -> vt) = "ARRAY[" <> (if V.null v then mempty else foldr1Comma vt) <> "]::" <> elementTypeStr v Proxy <> "[]" where
 		elementTypeStr :: SchemableField a => V.Vector a -> Proxy (V.Vector a) -> TL.Builder
 		elementTypeStr _ = postgresSchemaFieldTypeName . schemaFieldTypeOf
+
+foldr1Comma :: (Foldable f, Monoid a, IsString a) => f a -> a
+foldr1Comma = foldr1 $ \a b -> a <> ", " <> b
