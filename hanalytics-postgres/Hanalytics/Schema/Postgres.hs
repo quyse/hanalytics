@@ -15,7 +15,6 @@ module Hanalytics.Schema.Postgres
 	) where
 
 import Data.Int
-import Data.Monoid
 import qualified Data.ByteArray.Encoding as BA
 import qualified Data.ByteString as B
 import Data.Proxy
