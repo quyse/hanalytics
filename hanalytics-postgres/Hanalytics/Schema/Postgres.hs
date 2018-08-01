@@ -70,20 +70,20 @@ postgresSqlCreateType schema@Schema
 	} = "CREATE TYPE \"" <> TL.fromText name <> "\" AS (" <> foldr1Comma (postgresSchemaFields False schema) <> ");\n"
 
 -- | Generate SQL INSERT command for a bunch of records.
-postgresSqlInsertGroup :: ToPostgresText a => Schema -> T.Text -> [a] -> TL.Builder
-postgresSqlInsertGroup Schema
+postgresSqlInsertGroup :: (Schemable a, ToPostgresText a) => T.Text -> [a] -> TL.Builder
+postgresSqlInsertGroup tableName records@(schemaOfListElement -> Schema
 	{ schema_fields = fields
-	} tableName records = "INSERT INTO \"" <> TL.fromText tableName <> "\"(" <> fieldsText <> ") VALUES " <> recordsText <> ";\n" where
+	}) = "INSERT INTO \"" <> TL.fromText tableName <> "\"(" <> fieldsText <> ") VALUES " <> recordsText <> ";\n" where
 	recordsText = foldr1Comma $ map (\a -> "(" <> toPostgresText True a <> ")") records
 	fieldsText = foldr1Comma $ fmap (\SchemaField
 		{ schemaField_name = fieldName
 		} -> "\"" <> TL.fromText fieldName <> "\"") fields
 
 -- | Generate SQL upsert (INSERT ... ON CONFLICT DO UPDATE) command for a bunch of records.
-postgresSqlUpsertGroup :: ToPostgresText a => T.Text -> Schema -> T.Text -> [a] -> TL.Builder
-postgresSqlUpsertGroup conflictField Schema
+postgresSqlUpsertGroup :: (Schemable a, ToPostgresText a) => T.Text -> T.Text -> [a] -> TL.Builder
+postgresSqlUpsertGroup conflictField tableName records@(schemaOfListElement -> Schema
 	{ schema_fields = fields
-	} tableName records = "INSERT INTO \"" <> TL.fromText tableName <> "\"(" <> fieldsText <> ") VALUES " <> recordsText <> " ON CONFLICT (\"" <> TL.fromText conflictField <> "\") DO UPDATE SET " <> assignsText <> ";\n" where
+	}) = "INSERT INTO \"" <> TL.fromText tableName <> "\"(" <> fieldsText <> ") VALUES " <> recordsText <> " ON CONFLICT (\"" <> TL.fromText conflictField <> "\") DO UPDATE SET " <> assignsText <> ";\n" where
 	recordsText = foldr1Comma $ map (\a -> "(" <> toPostgresText True a <> ")") records
 	fieldsText = foldr1Comma $ fmap (\SchemaField
 		{ schemaField_name = fieldName
@@ -91,6 +91,11 @@ postgresSqlUpsertGroup conflictField Schema
 	assignsText = foldr1Comma $ fmap (\SchemaField
 		{ schemaField_name = fieldName
 		} -> "\"" <> TL.fromText fieldName <> "\" = EXCLUDED.\"" <> TL.fromText fieldName <> "\"") fields
+
+schemaOfListElement :: Schemable a => [a] -> Schema
+schemaOfListElement = schemaOf . f where
+	f :: [a] -> Proxy a
+	f _ = Proxy
 
 -- | Class for exporting values into postgres text import format.
 class ToPostgresText a where
