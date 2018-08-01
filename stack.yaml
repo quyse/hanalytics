@@ -5,6 +5,3 @@ packages:
 - hanalytics-base
 - hanalytics-bigquery
 - hanalytics-postgres
-
-ghc-options:
-  "$locals": -threaded -Wall -Wno-tabs
