@@ -119,7 +119,7 @@ instance (G.Datatype c, GenericToPostgresTextConstructor f) => GenericToPostgres
 	genericToPostgresTextDatatype inline = genericToPostgresTextConstructor inline . G.unM1
 
 instance (G.Constructor c, GenericToPostgresTextSelector f) => GenericToPostgresTextConstructor (G.M1 G.C c f) where
-	genericToPostgresTextConstructor inline = (\a -> if inline then a else "ROW(" <> a <> ")") . genericToPostgresTextSelector . G.unM1
+	genericToPostgresTextConstructor inline = wrapIfNotInline inline . genericToPostgresTextSelector . G.unM1
 
 instance (G.Selector c, GenericToPostgresTextValue f) => GenericToPostgresTextSelector (G.M1 G.S c f) where
 	genericToPostgresTextSelector = genericToPostgresTextValue . G.unM1
@@ -159,9 +159,15 @@ instance ToPostgresText a => ToPostgresText (Maybe a) where
 	toPostgresText _ = maybe "NULL" (toPostgresText False)
 
 instance (ToPostgresText a, SchemableField a) => ToPostgresText (V.Vector a) where
-	toPostgresText _ v@(V.map (toPostgresText False) -> vt) = "ARRAY[" <> (if V.null v then mempty else foldr1Comma vt) <> "]::" <> elementTypeStr v Proxy <> "[]" where
+	toPostgresText _ v@(V.map (toPostgresText False) -> vt) = (if V.null v then "'{}'" else "ARRAY[" <> foldr1Comma vt <> "]") <> "::" <> elementTypeStr v Proxy <> "[]" where
 		elementTypeStr :: SchemableField a => V.Vector a -> Proxy (V.Vector a) -> TL.Builder
 		elementTypeStr _ = postgresSchemaFieldTypeName . schemaFieldTypeOf
+
+wrapIfNotInline :: Bool -> TL.Builder -> TL.Builder
+wrapIfNotInline inline = if inline then id else wrapRow
+
+wrapRow :: TL.Builder -> TL.Builder
+wrapRow a = "ROW(" <> a <> ")"
 
 foldr1Comma :: (Foldable f, Monoid a, IsString a) => f a -> a
 foldr1Comma = foldr1 $ \a b -> a <> ", " <> b
