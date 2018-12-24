@@ -5,7 +5,6 @@ License: MIT
 -}
 
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, OverloadedStrings, TypeOperators #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Hanalytics.Schema.Avro
 	( genericAvroSchema
@@ -57,8 +56,7 @@ instance (G.Datatype c, GenericAvroSchemableConstructor f) => GenericAvroSchemab
 
 instance (G.Constructor c, GenericAvroSchemableSelector f) => GenericAvroSchemableConstructor (G.M1 G.C c f) where
 	genericAvroSchemaOfConstructor c = AS.Record
-		{ AS.name = AS.TN $ T.pack $ G.conName $ asProxyTypeOf undefined c
-		, AS.namespace = Just "Hanalytics"
+		{ AS.name = AS.TN (T.pack $ G.conName $ asProxyTypeOf undefined c) ["Hanalytics"]
 		, AS.aliases = []
 		, AS.doc = Nothing
 		, AS.order = Nothing
@@ -90,11 +88,6 @@ instance A.ToAvro a => GenericAvroSchemableValue (G.K1 G.R a) where
 		f :: A.HasAvroSchema a => Proxy a -> Tagged a AS.Type
 		f Proxy = A.schema
 	genericToAvroValue = A.toAvro . G.unK1
-
--- Schema for some types
-
-instance A.ToAvro a => A.ToAvro (V.Vector a) where
-	toAvro = AT.Array . V.map A.toAvro
 
 -- unfortunately have to use double for Integer
 instance A.HasAvroSchema Integer where
