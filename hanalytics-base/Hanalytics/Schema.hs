@@ -16,6 +16,7 @@ module Hanalytics.Schema
 	, stripBeforeUnderscore
 	) where
 
+import qualified Data.Aeson as J
 import qualified Data.ByteString as B
 import Data.Int
 import Data.Maybe
@@ -50,6 +51,7 @@ data SchemaFieldType
 	| SchemaFieldType_rational
 	| SchemaFieldType_float
 	| SchemaFieldType_bool
+	| SchemaFieldType_json
 	| SchemaFieldType_record
 		{ schemaFieldType_schema :: !Schema
 		}
@@ -125,6 +127,9 @@ instance SchemableField Double where
 
 instance SchemableField Bool where
 	schemaFieldTypeOf _ = SchemaFieldType_bool
+
+instance SchemableField J.Value where
+	schemaFieldTypeOf _ = SchemaFieldType_json
 
 instance SchemableField a => SchemableField (Maybe a) where
 	schemaFieldTypeOf = schemaFieldTypeOf . fmap (fromMaybe undefined)

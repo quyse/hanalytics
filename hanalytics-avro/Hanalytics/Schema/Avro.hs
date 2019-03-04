@@ -5,21 +5,23 @@ License: MIT
 -}
 
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, OverloadedStrings, TypeOperators #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Hanalytics.Schema.Avro
 	( genericAvroSchema
 	, genericToAvro
 	) where
 
+import qualified Data.Aeson as J
 import qualified Data.Avro as A
 import qualified Data.Avro.Schema as AS
 import qualified Data.Avro.Types as AT
+import qualified Data.ByteString.Lazy as BL
 import qualified Data.HashMap.Lazy as HML
 import Data.Proxy
 import Data.Scientific
 import Data.Tagged
 import qualified Data.Text as T
-import qualified Data.Vector as V
 import qualified GHC.Generics as G
 
 import Hanalytics.Schema
@@ -102,3 +104,9 @@ instance A.HasAvroSchema Scientific where
 
 instance A.ToAvro Scientific where
 	toAvro = A.toAvro . (toRealFloat :: Scientific -> Double)
+
+instance A.HasAvroSchema J.Value where
+	schema = Tagged $ unTagged (A.schema :: Tagged BL.ByteString AS.Type)
+
+instance A.ToAvro J.Value where
+	toAvro = A.toAvro . J.encode

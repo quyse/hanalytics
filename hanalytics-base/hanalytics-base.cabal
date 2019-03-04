@@ -21,7 +21,8 @@ library
   exposed-modules:
     Hanalytics.Schema
   build-depends:
-    base
+    aeson
+    , base
     , bytestring
     , scientific
     , text

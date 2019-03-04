@@ -21,7 +21,8 @@ library
   exposed-modules:
     Hanalytics.Schema.Postgres
   build-depends:
-    base
+    aeson
+    , base
     , bytestring
     , hanalytics-base
     , memory

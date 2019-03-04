@@ -40,6 +40,7 @@ bigQuerySchema Schema
 				SchemaFieldType_rational -> "FLOAT" -- unfortunately
 				SchemaFieldType_float -> "FLOAT"
 				SchemaFieldType_bool -> "BOOLEAN"
+				SchemaFieldType_json -> "STRING"
 				SchemaFieldType_record _ -> "RECORD"
 				)
 			] ++ (case fieldType of
